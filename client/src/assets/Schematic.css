@@ -1,0 +1,132 @@
+div.frow {
+    display: grid;
+    user-select: none;
+}
+
+div.nrow, div.srow {
+    display: grid;
+}
+
+div.categ {  
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    background-color: rgb(224, 111, 46);
+    border-style: solid;
+    border-right-width: 1px;
+    border-left-width: 1px;
+    
+}
+
+div.srow {
+    background-color: rgb(230, 230, 131);
+}
+
+div.nrow {
+    background-color: rgb(54, 187, 54);
+}
+
+div.nrow:hover {
+    background-color: rgb(102, 199, 102);
+}
+
+div.detail {
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    
+    border-style: solid;
+    border-width: 1px;
+}
+
+.editic {
+    width: 2em;
+    height: 2em;
+    align-tracks: center;
+    display: block;
+    margin: auto;
+    cursor: pointer;
+}
+
+div.table-wrapper {
+    width: min-content;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 80px;
+}
+
+.arrow {
+  width: 15px;
+  margin: auto;
+}
+
+p.category-name {
+    margin-left: auto;
+    margin-right: auto;
+    grid-column: 2;
+}
+
+div.grided {
+    display: grid;
+    grid-template-columns: 20% 60% 20%;
+    width: 220px;
+}
+
+div.currency {
+    grid-column: 3;
+}
+
+div.symbols-wrapper {
+    display: grid;
+    grid-template-columns: 40% 20% 40%;
+    width: 220px;
+    height: max-content;
+    justify-content: center;
+    align-content: center;
+}
+
+input.search-bar {
+    margin-left: auto;
+    margin-right: auto;
+    width: 30vw;
+    display: block;
+    border-radius: 30px;
+    font-size: 32px;
+    grid-column: 1;
+    padding-left: 20px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    box-shadow: 10px;
+    border-color: black;
+
+}
+
+div.filter-wrapper {
+    display: grid;
+    grid-template-columns:  30% 10% ;
+    justify-content: center;
+    margin-top: 80px;
+}
+
+button.filter-button {
+    grid-column: 2;
+    margin-left: 40px;
+    border-radius: 30px;
+    
+}
+
+input.price-input {
+    margin-left: 15px;
+}
+
+div.pln {
+    margin-left: 15px;
+}
+
+select.currency-select {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
+    font-size: 20px;
+}
