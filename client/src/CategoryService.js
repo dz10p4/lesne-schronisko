@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const caurl = "http://localhost:5000/api/posts/hou/cat";
-const dcurl = "http://localhost:5000/api/posts/cat/del"
-const ecurl = "http://localhost:5000/api/posts/hou/cat/del"
+const caurl = "https://lesna-polana.herokuapp.com/api/posts/hou/cat";
+const dcurl = "https://lesna-polana.herokuapp.com/api/posts/cat/del"
+const ecurl = "https://lesna-polana.herokuapp.com/api/posts/hou/cat/del"
 
 class CategoryService {
   // get posts

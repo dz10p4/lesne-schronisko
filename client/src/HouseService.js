@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const hourl = "http://localhost:5000/api/posts/hou";
-const anhourl = "http://localhost:5000/api/posts/houa";
-const delhourl = "http://localhost:5000/api/posts/houd";
+const hourl = "https://lesna-polana.herokuapp.com/api/posts/hou";
+const anhourl = "https://lesna-polana.herokuapp.com/api/posts/houa";
+const delhourl = "https://lesna-polana.herokuapp.com/api/posts/houd";
 
 class HouseService {
     // get posts

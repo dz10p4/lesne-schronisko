@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const caurl = "http://localhost:5000/api/posts/cat";
+const caurl = "https://lesna-polana.herokuapp.com/api/posts/cat";
 
 class PostService {
   // get posts

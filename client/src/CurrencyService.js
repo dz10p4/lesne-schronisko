@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const courl = "http://localhost:5000/api/posts/cur/";
+const courl = "https://lesna-polana.herokuapp.com/api/posts/cur/";
 
 
 class CurrencyService {
