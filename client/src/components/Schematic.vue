@@ -33,7 +33,7 @@ defineProps({
 
 
 <div class="table-wrapper">
-  <div class="frow">
+  <div class="frow" :style="{ gridTemplateColumns: 'repeat( calc(  '+posts.length+' + 4 ), 220px)'}">
     <div class="categ" style="cursor: pointer" @click="updateCategory('Miejsce')">
 
       <div v-if=" 'Miejsce' === pickedCategory.watchedCategory" class="grided">
@@ -90,7 +90,7 @@ defineProps({
     <div class="categ"><p class="category-name">Edycja</p></div>
   </div>
 
-  <div class="srow">
+  <div class="srow" :style="{ gridTemplateColumns: 'repeat( calc(  '+posts.length+' + 4 ), 220px)'}">
     <div class="detail">
       <select v-model="dataToAdd['Miejsce']">
         <option value="Na drzewie">Na drzewie</option>
@@ -109,6 +109,7 @@ defineProps({
 
   <div class="nrow"
     v-for="(house, key) in sortedHouses"
+    :style="{ gridTemplateColumns: 'repeat( calc(  '+posts.length+' + 4 ), 220px)'}"
   >
     <div class="detail" v-if="key !== editedRowKey">{{house.Miejsce}}</div>
     <select v-model="editedData['Miejsce']" v-else>
@@ -144,10 +145,12 @@ import PostService from '../PostService';
 import HouseService from '../HouseService'
 import EditIcon from '../assets/edit-round-line.vue'
 import CurrencyService from '../CurrencyService';
+import { ref } from 'vue'
 
 const pickedCategory = reactive({watchedCategory: 'Miejsce', sortDirection: 0});
 
-
+const searchValue=ref('');
+const currencyMultiplier=ref(1);
 
 export default {
   name: 'Schematic',
@@ -160,10 +163,8 @@ export default {
       editedRowKey: -1,
       currentCurrency: 'zł',
       editedData: [],
-      dataToAdd: new Object(),
       searchQuery: '',
-      searchValue: '',
-      currencyMultiplier: 1,
+      dataToAdd: new Object(),
     }
   },
   async created() {
@@ -254,44 +255,48 @@ export default {
 
       if(this.searchQuery !== '')
       {
-        for(var i = 0 ; i < this.houses.length ; i++) {
-          console.log(this.houses[i]);
-          Object.values(this.houses[i]).forEach(item => {
+        return this.houses.sort((a,b) => {
+          let comparator = 1;
+          if(pickedCategory.sortDirection === 1) comparator = -1;
+          if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
+          else {
+            if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -comparator;
+            if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return comparator;
+          }
+          return 0;
+        }).filter((row,index) => {
+          var checkedObject = new Object();
+          checkedObject = row;
+          delete checkedObject._id;
+          delete checkedObject.id;
+          var isIncluded = false;
+          Object.values(checkedObject).forEach(item => {
             if(typeof item === "string") {
               
               if(item.toLowerCase().includes(this.searchQuery.toLowerCase())) {
-                console.log('yay')
-                filteredKeys[i] = 1;
+                isIncluded = true;
               }
             }
             else {
               if(item.toString().includes(this.searchQuery.toLowerCase())) {
-                console.log('yay')
-                filteredKeys[i] = 1;
+                isIncluded = true;
               }
 
             }
           })
-
-        }
-        return this.houses.sort((a,b) => {
-        let comparator = 1;
-        if(pickedCategory.sortDirection === 1) comparator = -1;
-        if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -1*comparator;
-        if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return 1*comparator;
-        return 0;
-      }).filter((row,index) => {
-        if(filteredKeys[index] === 1)return true;
-        else return false;
-      });
+          return isIncluded;
+         });
 
       }
 
       return this.houses.sort((a,b) => {
         let comparator = 1;
         if(pickedCategory.sortDirection === 1) comparator = -1;
-        if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -1*comparator;
-        if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return 1*comparator;
+        if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
+        else {
+          if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -1*comparator;
+          if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return 1*comparator;
+        }
         return 0;
       })
     }
@@ -309,8 +314,5 @@ export default {
 <style scoped>
 @import '@/assets/Schematic.css';
 
-div.frow, div.nrow, div.srow  {
-  grid-template-columns: repeat( calc( v-bind( posts.length ) + 4 ), 220px)
-}
 
 </style>

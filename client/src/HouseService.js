@@ -33,7 +33,6 @@ class HouseService {
     }
 
     static addData(object) {
-        console.log(object);
         return axios.post(anhourl,{
             object
         })

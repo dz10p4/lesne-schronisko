@@ -1,8 +1,5 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
 import Schematic from '@/components/Schematic.vue'
-import axios from 'axios'
-import PostService from './PostService.js'
 
 defineProps({
   msg: {
