@@ -12,24 +12,190 @@ defineProps({
 
 </script>
 
+<script>
+import PostService from '../PostService';
+import HouseService from '../HouseService'
+import EditIcon from '../assets/edit-round-line.vue'
+import CurrencyService from '../CurrencyService';
+
+const pickedCategory = reactive({watchedCategory: 'Miejsce', sortDirection: 0});
+const searchQuery = reactive({queryValue: '', searchValue: ''});
+const currencyData = reactive({selectedCurrency: 'zł', multiplier: 1});
+
+export default {
+  name: 'Schematic',
+  data() {
+    return {
+      posts: [],
+      error: '',
+      text: '',
+      houses: [],
+      editedRowKey: -1,
+      //currencyMultiplier: 1,
+      //currentCurrency: 'zł',
+      editedData: [],
+      dataToAdd: new Object()
+    }
+  },
+  async created() {
+
+    try {
+      this.posts = await PostService.getPosts()
+      this.houses = await HouseService.getPosts()
+      
+    } catch(err) {
+      this.error=err.message;
+    }
+    this.dataToAdd['Miejsce'] = 'Na drzewie';
+  },
+  methods: {
+    updateCategory:function(param) {
+      if(this.editedRowKey !== -1)return;
+      if(pickedCategory.watchedCategory === param) { 
+        if(pickedCategory.sortDirection === 1){ pickedCategory.sortDirection = 0; pickedCategory.sortDirection = 0;}
+        else {pickedCategory.sortDirection = 1; pickedCategory.sortDirection=1;}
+      }
+      else {pickedCategory.sortDirection = 0; pickedCategory.sortDirection = 0;}
+      pickedCategory.watchedCategory=param; pickedCategory.watchedCategory=param;
+    },
+
+    reloadWindow:function() {
+      window.location.reload();
+    },
+
+    editValues:function(id,key) {
+      this.editedRowKey = key;
+      this.editedData = this.sortedHouses[key];
+    },
+
+    async sendEditedData() {
+      var editedTable = this.editedData;
+      editedTable['Cena'] = parseFloat(editedTable['Cena']);
+      await HouseService.updateData(editedTable);
+
+      this.editedData = [];
+      this.editedRowKey = -1;
+    },
+    
+    async sendAddedData() {
+      var addData = this.dataToAdd;
+      addData['Cena'] = parseFloat(addData['Cena']);
+      await HouseService.addData(addData);
+      this.dataToAdd = [];
+      this.dataToAdd['Miejsce'] = 'Na drzewie';
+      this.houses = await HouseService.getPosts();
+    },
+
+    async removeElement(key) {
+      var delVal = this.sortedHouses[key]._id;
+      await HouseService.deletePost(delVal);
+      
+    },
+
+    filterData:function() {
+      this.editedRowKey = -1;
+      searchQuery.queryValue = searchQuery.searchValue;
+    },
+
+    async updateCurrency() {
+      if(currencyData.selectedCurrency === 'zł') currencyData.multiplier = 1;
+      else {
+        
+        var foreignCurrency;
+
+        if(currencyData.selectedCurrency === '$')foreignCurrency = 'USD';
+        else if(currencyData.selectedCurrency === '€')foreignCurrency = 'EUR';
+        else foreignCurrency = currencyData.selectedCurrency;
+        var currencyMultiplierbd = await CurrencyService.getMultiplier(foreignCurrency);
+       
+        currencyData.multiplier =  currencyMultiplierbd.data.multiplier;
+        
+      }
+
+    }
+
+
+
+  },
+  computed: {
+    sortedHouses:function() {
+      
+      if(this.editedRowKey !== -1) return this.houses;
+
+      if(searchQuery.queryValue !== '')
+      {
+        return this.houses.sort((a,b) => {
+          let comparator = 1;
+          if(pickedCategory.sortDirection === 1) comparator = -1;
+          if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
+          else {
+            if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -comparator;
+            if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return comparator;
+          }
+          return 0;
+        }).filter((row,index) => {
+          var checkedObject = new Object();
+          checkedObject = row;
+          delete checkedObject._id;
+          delete checkedObject.id;
+          var isIncluded = false;
+          Object.values(checkedObject).forEach(item => {
+            if(typeof item === "string") {
+              if(item.toLowerCase().includes(searchQuery.queryValue.toLowerCase())) {
+                isIncluded = true;
+              }
+            }
+            else {
+              if(item.toString().includes(searchQuery.queryValue.toLowerCase())) {
+                isIncluded = true;
+              }
+            }
+          })
+          return isIncluded;
+         });
+
+      }
+
+      return this.houses.sort((a,b) => {
+        let comparator = 1;
+        if(pickedCategory.sortDirection === 1) comparator = -1;
+        if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
+        else {
+          if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -comparator;
+          if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return comparator;
+        }
+        return 0;
+      })
+    }
+
+  }
+
+}
+
+
+
+
+</script>
+
+
 <template>
 
 <EditCartegories />
 
 
 <div class="filter-wrapper">
-  <input type="text" class="search-bar" placeholder="Wyszukaj..." v-model="searchValue" spellcheck="false" @keyup.enter="filterData()" />
+  <input type="text" class="search-bar" placeholder="Wyszukaj..." v-model="searchQuery.searchValue" spellcheck="false" @keyup.enter="filterData()" />
   <button class="filter-button" @click="filterData()">Filtruj</button>
 </div>
 
 <p style="text-align:center; font-size: 20px; margin-top: 60px;">Waluta:</p>
 <div class="currency-selector" @change="updateCurrency()">
-  <select class="currency-select" v-model="currentCurrency">
+  <select class="currency-select" v-model="currencyData.selectedCurrency">
     <option v-for="(cur, key) in currencies" v-bind:value="key">{{cur}}</option>
   </select>
 </div>
 
-<p style="text-align:center; font-size:18px; margin-top: 30px;" v-if="currentCurrency !== 'zł'">Kurs: 1 PLN = {{currencyMultiplier+' '+currentCurrency}} </p>
+<p style="text-align:center; font-size:18px; margin-top: 30px;" v-if="currencyData.selectedCurrency !== 'zł'">Kurs: 1 PLN = {{currencyData.multiplier+' '+currencyData.selectedCurrency}} </p>
 
 
 <div class="table-wrapper">
@@ -123,7 +289,7 @@ defineProps({
     <div class="detail" v-if="key !== editedRowKey" v-for="(post) in posts">{{ house[post.category] }}</div>
     <input type="text" v-else v-for="(post) in posts"  v-model="editedData[post.category]" @keyup.enter="sendEditedData()" />
    
-    <div class="detail" v-if="key !== editedRowKey">{{currencyMultiplier < 0.01 ? (house.Cena * currencyMultiplier).toFixed(7) : (house.Cena * currencyMultiplier).toFixed(2) }} {{currentCurrency}}</div>
+    <div class="detail" v-if="key !== editedRowKey">{{currencyData.multiplier < 0.01 ? (house.Cena * currencyData.multiplier).toFixed(7) : (house.Cena * currencyData.multiplier).toFixed(2) }} {{currencyData.selectedCurrency}}</div>
     <div class="detail" v-else> <input type="text"  v-model="editedData['Cena']" style="margin-right: 10px;" @keyup.enter="sendEditedData()" />  <div class="currency">zł</div> </div>
 
     <div class="detail">
@@ -139,176 +305,6 @@ defineProps({
 
 </div>
 </template>
-
-<script>
-import PostService from '../PostService';
-import HouseService from '../HouseService'
-import EditIcon from '../assets/edit-round-line.vue'
-import CurrencyService from '../CurrencyService';
-import { ref } from 'vue'
-
-const pickedCategory = reactive({watchedCategory: 'Miejsce', sortDirection: 0});
-
-const searchValue=ref('');
-const currencyMultiplier=ref(1);
-
-export default {
-  name: 'Schematic',
-  data() {
-    return {
-      posts: [],
-      error: '',
-      text: '',
-      houses: [],
-      editedRowKey: -1,
-      currentCurrency: 'zł',
-      editedData: [],
-      searchQuery: '',
-      dataToAdd: new Object(),
-    }
-  },
-  async created() {
-
-    try {
-      this.posts = await PostService.getPosts()
-      this.houses = await HouseService.getPosts()
-      
-    } catch(err) {
-      this.error=err.message;
-    }
-    this.dataToAdd['Miejsce'] = 'Na drzewie';
-
-  },
-  methods: {
-    updateCategory:function(param) {
-      if(this.editedRowKey !== -1)return;
-      if(pickedCategory.watchedCategory === param) { 
-        if(pickedCategory.sortDirection === 1){ pickedCategory.sortDirection = 0; pickedCategory.sortDirection = 0;}
-        else {pickedCategory.sortDirection = 1; pickedCategory.sortDirection=1;}
-      }
-      else {pickedCategory.sortDirection = 0; pickedCategory.sortDirection = 0;}
-      pickedCategory.watchedCategory=param; pickedCategory.watchedCategory=param;
-    },
-
-    reloadWindow:function() {
-      window.location.reload();
-    },
-
-    editValues:function(id,key) {
-      this.editedRowKey = key;
-      this.editedData = this.sortedHouses[key];
-    },
-
-    async sendEditedData() {
-      var editedTable = this.editedData;
-      editedTable['Cena'] = parseFloat(editedTable['Cena']);
-      await HouseService.updateData(editedTable);
-
-      this.editedData = [];
-      this.editedRowKey = -1;
-    },
-    
-    async sendAddedData() {
-      var addData = this.dataToAdd;
-      addData['Cena'] = parseFloat(addData['Cena']);
-      await HouseService.addData(addData);
-      this.dataToAdd = [];
-      this.dataToAdd['Miejsce'] = 'Na drzewie';
-      this.houses = await HouseService.getPosts();
-    },
-
-    async removeElement(key) {
-      var delVal = this.sortedHouses[key]._id;
-      await HouseService.deletePost(delVal);
-      
-    },
-
-    filterData:function() {
-      this.editedRowKey = -1;
-      this.searchQuery = this.searchValue;
-    },
-
-    async updateCurrency() {
-      if(this.currentCurrency === 'zł') this.currencyMultiplier = 1;
-      else {
-        
-        var foreignCurrency;
-
-        if(this.currentCurrency === '$')foreignCurrency = 'USD';
-        else if(this.currentCurrency === '€')foreignCurrency = 'EUR';
-        else foreignCurrency = this.currentCurrency;
-        var currencyMultiplierbd = await CurrencyService.getMultiplier(foreignCurrency);
-       
-        this.currencyMultiplier =  currencyMultiplierbd.data.multiplier;
-        
-      }
-
-    }
-
-
-
-  },
-  computed: {
-    sortedHouses:function() {
-      var filteredKeys = [];
-      if(this.editedRowKey !== -1) return this.houses;
-
-      if(this.searchQuery !== '')
-      {
-        return this.houses.sort((a,b) => {
-          let comparator = 1;
-          if(pickedCategory.sortDirection === 1) comparator = -1;
-          if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
-          else {
-            if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -comparator;
-            if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return comparator;
-          }
-          return 0;
-        }).filter((row,index) => {
-          var checkedObject = new Object();
-          checkedObject = row;
-          delete checkedObject._id;
-          delete checkedObject.id;
-          var isIncluded = false;
-          Object.values(checkedObject).forEach(item => {
-            if(typeof item === "string") {
-              
-              if(item.toLowerCase().includes(this.searchQuery.toLowerCase())) {
-                isIncluded = true;
-              }
-            }
-            else {
-              if(item.toString().includes(this.searchQuery.toLowerCase())) {
-                isIncluded = true;
-              }
-
-            }
-          })
-          return isIncluded;
-         });
-
-      }
-
-      return this.houses.sort((a,b) => {
-        let comparator = 1;
-        if(pickedCategory.sortDirection === 1) comparator = -1;
-        if(typeof a[pickedCategory.watchedCategory] === 'string')return a[pickedCategory.watchedCategory].localeCompare(b[pickedCategory.watchedCategory])*comparator;
-        else {
-          if(a[pickedCategory.watchedCategory] < b[pickedCategory.watchedCategory])return -1*comparator;
-          if(a[pickedCategory.watchedCategory] > b[pickedCategory.watchedCategory])return 1*comparator;
-        }
-        return 0;
-      })
-    }
-
-  }
-
-}
-
-
-
-
-</script>
 
 
 <style scoped>
